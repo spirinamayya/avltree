@@ -3,15 +3,15 @@
 
 #include "Controller.h"
 
-class Connection{
-public:
-    Connection(MainWindow* mainWindow);
-    //~Connection();
+namespace mvc {
+    class Application {
+    public:
+        Application();
 
-private:
-    AVLTree _model;
-    View _view;
-    Controller _controller;
-};
-
+    private:
+        AVLTree model_;
+        View view_;
+        Controller controller_{&model_};
+    };
+}
 #endif //COURSEPROJECT_CONNECTION_H

@@ -1,226 +1,238 @@
 #include "View.h"
+#include <QMenuBar>
+#include <QAction>
+#include <QMenu>
 
-View::View(MainWindow* mainWindow)
-        : mainWindow(mainWindow)
-{
-    addButton = new QPushButton("Add node");
-    deleteButton = new QPushButton("Delete node");
-    editText = new QLineEdit();
+namespace mvc {
 
-    treeSpot = new QGraphicsView();
-    scene = new QGraphicsScene();
-    scene->setBackgroundBrush(Qt::white);
-    treeSpot->setScene(scene);
+    View::View() {
+        mainWindow = new MainWindow();
+        mainWindow->setWindowTitle("AVL tree");
+        mainWindow->show();
 
-    QVBoxLayout *layout = new QVBoxLayout(mainWindow);
+        QMenuBar* menu = new QMenuBar(mainWindow);
+        QMenu* about = new QMenu("About");
+        QAction* act = new QAction(about);
+        act->setText("Info");
+        about->addAction(act);
+        menu->addMenu(about);
+        QObject::connect(act, &QAction::triggered, this, &View::aboutMenu);
 
-    layout->addWidget(editText);
-    layout->addWidget(addButton);
-    layout->addWidget(deleteButton);
-    layout->addWidget(treeSpot);
+        addButton_ = new QPushButton("Add node", mainWindow);
+        deleteButton_ = new QPushButton("Delete node", mainWindow);
+        searchButton_ = new QPushButton("Search node", mainWindow);
 
-    QObject::connect(addButton, SIGNAL(clicked()), this, SLOT(addNode()));
-    QObject::connect(deleteButton, SIGNAL(clicked(bool)), this, SLOT(deleteNode()));
+        inOrderButton_ = new QPushButton("Inorder traversal", mainWindow);
+        preOrderButton_ = new QPushButton("Preorder traversal", mainWindow);
+        postOrderButton_ = new QPushButton("Postorder traversal", mainWindow);
 
-}
+        QValidator *validator = new QIntValidator(mainWindow);
+        editText_ = new QLineEdit(mainWindow);
+        editText_->setValidator(validator);
 
-bool View::checkEditorForInteger(QLineEdit* edt, int& res)
-{
-    bool convOk;
-    res = edt->text().toInt(&convOk);
-    if (!convOk)
+        treeSpot_ = new QGraphicsView(mainWindow);
+        scene_ = new CustomScene(this);
+        scene_->setBackgroundBrush(Qt::white);
+        treeSpot_->setScene(scene_);
+
+        slider_ = new QSlider(Qt::Horizontal, mainWindow);
+        slider_->setTickInterval(50);
+        slider_->setMinimum(250);
+        slider_->setMaximum(1250);
+
+        QHBoxLayout* layout = new QHBoxLayout(mainWindow);
+
+        QGroupBox* box = new QGroupBox(mainWindow);
+        QVBoxLayout* buttonLayout = new QVBoxLayout(box);
+        layout->addWidget(treeSpot_, 75);
+        layout->addWidget(box, 25);
+        buttonLayout->setSpacing(15);
+        buttonLayout->setAlignment(Qt::AlignTop);
+
+        QLabel* header1 = new QLabel(mainWindow);
+        header1->setText(tr("Type integer:"));
+        buttonLayout->addWidget(header1);
+        buttonLayout->addWidget(editText_);
+        buttonLayout->addWidget(addButton_);
+        buttonLayout->addWidget(deleteButton_);
+        buttonLayout->addWidget(searchButton_);
+
+        QSpacerItem* spacer = new QSpacerItem(2, 70);
+        buttonLayout->addSpacerItem(spacer);
+        QLabel* header2 = new QLabel(mainWindow);
+        header2->setText(tr("Tree traversals:"));
+        buttonLayout->addWidget(header2);
+        buttonLayout->addWidget(inOrderButton_);
+        buttonLayout->addWidget(preOrderButton_);
+        buttonLayout->addWidget(postOrderButton_);
+
+        buttonLayout->addSpacerItem(spacer);
+        QLabel* header4= new QLabel(mainWindow);
+        header4->setText(tr("Speed:"));
+        buttonLayout->addWidget(header4);
+        buttonLayout->addWidget(slider_);
+
+        buttonLayout->addSpacerItem(spacer);
+        QLabel* header3 = new QLabel(mainWindow);
+        header3->setText(tr("Node count:"));
+        buttonLayout->addWidget(header3);
+        count_ = new QLineEdit(mainWindow);
+        count_->setReadOnly(true);
+        count_->setFixedSize(50, 50);
+        count_->setAlignment(Qt::AlignCenter);
+        count_->setText("0");
+        buttonLayout->addWidget(count_);
+
+        QObject::connect(addButton_, SIGNAL(clicked()), this, SLOT(addNode()));
+        QObject::connect(deleteButton_, SIGNAL(clicked(bool)), this, SLOT(deleteNode()));
+        QObject::connect(searchButton_, SIGNAL(clicked(bool)), this, SLOT(searchNode()));
+        QObject::connect(inOrderButton_, SIGNAL(clicked()), this, SLOT(inOrder()));
+        QObject::connect(preOrderButton_, SIGNAL(clicked(bool)), this, SLOT(preOrder()));
+        QObject::connect(postOrderButton_, SIGNAL(clicked(bool)), this, SLOT(postOrder()));
+    }
+
+    void View::drawTree(Info* treeInfo, AVLTree::Operation& operation, int passing)
     {
-        QMessageBox msgBox;
-        msgBox.setText(edt->objectName() + " not integer");
-        msgBox.exec();
-        return false;
-    }
-    return true;
-}
+        scene_->clear();
+        scene_->setBackgroundBrush(Qt::white);
+        Info* root = treeInfo;
+        if (root == nullptr)
+            return;
+        std::queue<Info*> que;
+        que.push(root);
+        Info* cur;
+        int count = 1;
+        while (!que.empty()) {
+            cur = que.front();
+            que.pop();
 
-void View::addNode()
-{
-    addValue.clear();
-    int val;
-    if (!checkEditorForInteger(editText, val)) {
-        editText->clear();
-        return;
-    }
-    addValue.push_back(editText->text().toInt());
-    addValue.push_back(0);
-    editText->clear();
-    addPort.notify();
-}
+            QBrush cyanbrush(Qt::darkCyan);
+            QPen blackpen(Qt::black);
+            blackpen.setWidth(1);
+            QPen redpen(Qt::red);
+            redpen.setWidth(3);
 
-void View::deleteNode()
-{
-    addValue.clear();
-    int val;
-    if (!checkEditorForInteger(editText, val)) {
-        editText->clear();
-        return;
-    }
-    addValue.push_back(editText->text().toInt());
-    addValue.push_back(1);
-    editText->clear();
-    addPort.notify();
-}
+            if(operation == AVLTree::Search && cur->key == passing || operation == AVLTree::Traversal && cur->key == passing)
+                ellipse_ = scene_->addEllipse(cur->x,cur->y,RADIUS,RADIUS,redpen, cyanbrush);
+            else
+                ellipse_ = scene_->addEllipse(cur->x,cur->y,RADIUS,RADIUS,blackpen, cyanbrush);
 
-void View::clear(Info* treeInfo)
-{
-    if(treeInfo != nullptr)
+            QGraphicsTextItem *text = scene_->addText(QString::number(cur->key));
+            text->setPos(cur->x + 10, cur->y + 10);
+
+            if (cur->left != nullptr) {
+                que.push(cur->left);
+                scene_->addLine(cur->x + 10, cur->y + 37, cur->left->x + 29, cur->left->y + 3);
+                ++count;
+            }
+            if (cur->right != nullptr) {
+                que.push(cur->right);
+                scene_->addLine(cur->x + 31, cur->y + 37, cur->right->x + 13, cur->right->y + 3);
+                ++count;
+            }
+        }
+        count_->setText(QString::number(count));
+    }
+
+    void delay(int millisecondsWait)
     {
-        clear(treeInfo->left);
-        clear(treeInfo->right);
-        delete treeInfo;
+        QTimer t;
+        QEventLoop loop;
+        t.connect(&t, &QTimer::timeout, &loop, &QEventLoop::quit);
+        t.start(millisecondsWait);
+        loop.exec();
     }
-}
 
-View::Info* View::copy(const Node* root)
-{
-    if(root == nullptr)
-        return nullptr;
-    else{
-        Info* temp = new Info;
-        temp->key = root->key;
-        temp->left = copy(root->leftCh);
-        temp->right = copy(root->rightCh);
-        return temp;
-    }
-}
-
-void View::calcYCoord(const Node* rootGet)
-{
-    clear(treeInfo);
-    ///create copy of a tree
-    treeInfo = copy(rootGet);
-    Info* root = treeInfo;
-    if (root == nullptr)
-        return;
-    ///implement level-order traversal
-    std::queue<Info*> que;
-    que.push(root);
-    Info* cur;
-    int count = 0, timesNow = 1, timesNext = 0;
-    while (!que.empty()) {
-        cur = que.front();
-        que.pop();
-        cur->y = count * (2 * R + H);
-        if (cur->left != nullptr){
-            que.push(cur->left);
-            ++timesNext;
-        }
-        if (cur->right != nullptr){
-            que.push(cur->right);
-            ++timesNext;
-        }
-        --timesNow;
-        if(timesNow == 0)
+    void View::drawPrep(const AVLTree::Data &data) {
+        if(data.message == 1)
         {
-            ++count;
-            timesNow = timesNext;
-            timesNext = 0;
+            QMessageBox msgBox;
+            msgBox.setText("already present");
+            msgBox.exec();
         }
-    }
-}
-
-void View::postOrder(Info* cur)
-{
-    if (cur == nullptr)
-        return;
-    postOrder(cur->left);
-    postOrder(cur->right);
-
-    if(cur->right == nullptr && cur->left == nullptr)
-        cur->width = 2 * R;
-    else if(cur->left == nullptr)
-        cur->width = cur->right->width + W;
-    else if(cur->right == nullptr)
-        cur->width = cur->left->width + W;
-    else
-        cur->width = cur->left->width + cur->right->width + W;
-}
-
-void View::calcXCoord(Info* rootGet) {
-    Info* coord = rootGet;
-    ///post-order tree traversal
-    postOrder(coord);
-    ///implement level-order traversal
-    Info* root = treeInfo;
-    if (root == nullptr)
-        return;
-    std::queue<Info*> que;
-    que.push(root);
-    Info* cur;
-    int count = 0, timesNow = 1, timesNext = 0;
-    while (!que.empty()) {
-        cur = que.front();
-        que.pop();
-        if (cur->left != nullptr){
-            que.push(cur->left);
-            ++timesNext;
-            cur->left->x = cur->x - W / 2 - cur->left->width / 2;
-        }
-        if (cur->right != nullptr){
-            que.push(cur->right);
-            ++timesNext;
-            cur->right->x = cur->x + W / 2 + cur->right->width / 2;
-        }
-        --timesNow;
-        if(timesNow == 0)
+        if(data.message == 2)
         {
-            ++count;
-            timesNow = timesNext;
-            timesNext = 0;
+            QMessageBox msgBox;
+            msgBox.setText("not present");
+            msgBox.exec();
+        }
+        const Node *node = data.value;
+        if (node == nullptr) {
+            scene_->clear();
+            return;
+        }
+        if(treeInfo_ != nullptr)
+            delete treeInfo_;
+        treeInfo_ = new InfoTree(node);
+        if(treeInfo_) {
+            delay(speed_);
+            drawTree(treeInfo_->getRoot(), data.operation, data.passing_);
         }
     }
-}
 
-void View::drawCircles()
-{
-    scene->clear();
-    scene->setBackgroundBrush(Qt::white);
-    Info* root = treeInfo;
-    if (root == nullptr)
-        return;
-    std::queue<Info*> que;
-    que.push(root);
-    Info* cur;
-    while (!que.empty()) {
-        cur = que.front();
-        que.pop();
-
-        QBrush redbrush(Qt::red);
-        QPen blackpen(Qt::black);
-        blackpen.setWidth(3);
-
-        QGraphicsEllipseItem* ellipse = scene->addEllipse(cur->x,cur->y,40,40,blackpen, redbrush);
-
-        QGraphicsTextItem *text = scene->addText(QString::number(cur->key));
-        text->setPos(cur->x + 10, cur->y + 10);
-
-        if (cur->left != nullptr) {
-            que.push(cur->left);
-            scene->addLine(cur->x + 10, cur->y + 35, cur->left->x + 20, cur->left->y + 5);
-        }
-        if (cur->right != nullptr) {
-            que.push(cur->right);
-            scene->addLine(cur->x + 30, cur->y + 35, cur->right->x + 10, cur->right->y + 5);
-        }
-    }
-}
-
-
-void View::drawTree(const AVLTree::ModAddData &data) {
-    const Node* root = data.Value;
-    if(root == nullptr) {
-        scene->clear();
-        return;
+    void View::deleteClicked(QPointF& point) {
+        speed_ = slider_->value();
+        std::pair<int, bool> temp = treeInfo_->findValue(point.x(), point.y());
+        if(!temp.second)
+            return;
+        editText_->setText(QString::number(temp.first));
     }
 
-    ///create tree that will help to draw
-    calcYCoord(root);
-    calcXCoord(treeInfo);
+    void View::addNode() {
+        speed_ = slider_->value();
+        operation_ = Operation::Add;
+        if(editText_->text().size() == 0)
+            return;
+        value_ = editText_->text().toInt();
+        editText_->clear();
+        commandPort.notify();
+    }
 
-    drawCircles();
+    void View::deleteNode() {
+        speed_ = slider_->value();
+        operation_ = Operation::Delete;
+        value_ = editText_->text().toInt();
+        editText_->clear();
+        commandPort.notify();
+    }
+
+    void View::searchNode() {
+        speed_ = slider_->value();
+        operation_ = Operation::Search;
+        value_ = editText_->text().toInt();
+        editText_->clear();
+        commandPort.notify();
+    }
+
+    void View::inOrder(){
+        speed_ = slider_->value();
+        operation_ = Operation::Traversal;
+        type_ = Type::InOrder;
+        commandPort.notify();
+    }
+    void View::preOrder(){
+        speed_ = slider_->value();
+        operation_ = Operation::Traversal;
+        type_ = Type::PreOrder;
+        commandPort.notify();
+    }
+    void View::postOrder(){
+        speed_ = slider_->value();
+        operation_ = Operation::Traversal;
+        type_ = Type::PostOrder;
+        commandPort.notify();
+    }
+
+    void View::aboutMenu() {
+        secondWindow_ = new AboutWindow();
+        secondWindow_->setWindowTitle("Additional information");
+        secondWindow_->show();
+    }
+
+    void View::CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *event){
+        QPointF pos = event->scenePos();
+        ptr->deleteClicked(pos);
+    }
+
 }
+

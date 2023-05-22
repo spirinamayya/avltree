@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(CourseProject)
 
+set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -14,7 +15,7 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
-add_executable(CourseProject main.cpp mainwindow.cpp mainwindow.ui Model.cpp View.cpp Controller.cpp Connection.cpp)
+add_executable(CourseProject main.cpp mainwindow.cpp mainwindow.ui Model.cpp View.cpp Controller.cpp Connection.cpp InfoTree.cpp aboutwindow.cpp)
 target_link_libraries(CourseProject
         Qt::Core
         Qt::Gui

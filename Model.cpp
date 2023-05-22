@@ -1,218 +1,276 @@
 #include "Model.h"
 
-int AVLTree::findMaxHeight(Node* left, Node* right)
-{
-    int l = 0, r = 0;
-    if(left != nullptr)
-        l = left->height;
-    if(right != nullptr)
-        r = right->height;
-    return std::max(l, r);
-}
+namespace mvc {
 
-int AVLTree::findBalanceFactor(Node* node)
-{
-    int l = 0, r = 0;
-    if(node == nullptr)
-        return 0;
-    if(node->leftCh != nullptr)
-        l = node->leftCh->height;
-    if(node->rightCh != nullptr)
-        r = node->rightCh->height;
-    return l - r;
-}
-
-Node* AVLTree::rightRotate(Node* node)
-{
-    Node* lCh = node->leftCh;
-    Node* rGrCh = node->leftCh->rightCh;
-    node->leftCh->rightCh = node;
-    node->leftCh = rGrCh;
-    node->height = findMaxHeight(node->leftCh, node->rightCh) + 1;
-    lCh->height = findMaxHeight(lCh->leftCh, lCh->rightCh) + 1;
-    return lCh;
-}
-Node* AVLTree::leftRotate(Node *node)
-{
-    Node* rCh = node->rightCh;
-    Node* lGrCh = node->rightCh->leftCh;
-    node->rightCh->leftCh = node;
-    node->rightCh = lGrCh;
-    node->height = findMaxHeight(node->leftCh, node->rightCh) + 1;
-    rCh->height = findMaxHeight(rCh->leftCh, rCh->rightCh) + 1;
-    return rCh;
-}
-
-
-Node* AVLTree::insert(Node* node, int key)
-{
-    ///find leaf node, where to insert newNode
-    if(node == nullptr)
-        return new Node(key);
-    if(key < node->key)
-        node->leftCh = insert(node->leftCh, key);
-    else if(key > node->key)
-        node->rightCh = insert(node->rightCh, key);
-    else
-        return node;
-
-    ///update height of ancestor
-    node->height = findMaxHeight(node->leftCh, node->rightCh) + 1;
-
-    ///find balance factor
-    int balanceFactor = findBalanceFactor(node);
-
-    ///check whether tree is unbalanced and balance it
-    if(balanceFactor > 1 && key < node->leftCh->key)
-        return rightRotate(node);
-    if(balanceFactor > 1 && key > node->leftCh->key)
-    {
-        node->leftCh = leftRotate(node->leftCh);
-        return rightRotate(node);
+    AVLTree::~AVLTree() {
+        clearHelp(root_);
     }
-    if(balanceFactor < -1 && key > node->rightCh->key)
-        return leftRotate(node);
-    if(balanceFactor < -1 && key < node->rightCh->key)
-    {
-        node->rightCh = rightRotate(node->rightCh);
-        return leftRotate(node);
+
+    void AVLTree::insert(int key) {
+        operation_ = Add;
+        root_ = insert(root_, key);
+        if (root_ == nullptr)
+            return;
+        port_.notify();
     }
-    return node;
-}
 
-void AVLTree::insert(int key)
-{
-    int t = 1;
-    root_ = insert(root_, key);
+    void AVLTree::deleteNode(int key) {
+        operation_ = Delete;
+        root_ = deleteNode(root_, key);
+        port_.notify();
+    }
 
-    if(root_== nullptr)
-        return;
-    insertPort.notify();
-}
+    void AVLTree::search(int key) {
+        operation_ = Search;
+        message_ = 0;
+        search(root_, key, message_);
+        if(message_ == 2)
+            operation_ = Add;
+        port_.notify();
+    }
 
-Node* AVLTree::inorderSuccessor(Node* x)
-{
-    Node* cur = x->rightCh;
-    while(cur->leftCh != nullptr)
-        cur = cur->leftCh;
-    return cur;
-}
+    void AVLTree::inOrder() {
+        message_ = 0;
+        operation_ = Operation::Traversal;
+        inOrderTraversal(root_);
+    }
 
-Node* AVLTree::deleteNode(Node *node, int key)
-{
-    ///findNode, which should be deleted, and delete it
-    if(node == nullptr)
-        return node;
-    if(key < node->key)
-        node->leftCh = deleteNode(node->leftCh, key);
-    else if(key > node->key)
-        node->rightCh = deleteNode(node->rightCh, key);
-    else
-    {
-        ///one or zero children
-        if(node->leftCh == nullptr || node->rightCh == nullptr)
-        {
-            Node* cur = nullptr;
-            if(node->leftCh)
-                cur = node->leftCh;
-            if(node->rightCh)
-                cur = node->rightCh;
-            if(cur == nullptr)
-            {
-                cur = node;
-                node = nullptr;
-            }
-            else
-                *node = *cur;
-            delete cur;
+    void AVLTree::preOrder() {
+        message_ = 0;
+        operation_ = Operation::Traversal;
+        preOrderTraversal(root_);
+    }
+
+    void AVLTree::postOrder() {
+        message_ = 0;
+        operation_ = Operation::Traversal;
+        postOrderTraversal(root_);
+    }
+
+    void AVLTree::clearHelp(Node *&node) {
+        if (node != nullptr) {
+            clearHelp(node->leftCh);
+            clearHelp(node->rightCh);
+            delete node;
+            node = nullptr;
         }
-            ///two children
+    }
+
+    Node *AVLTree::leftRotate(Node *node) {
+        Node *rCh = node->rightCh;
+        Node *lGrCh = node->rightCh->leftCh;
+        node->rightCh->leftCh = node;
+        node->rightCh = lGrCh;
+        node->height = findMaxHeight(node->leftCh, node->rightCh) + 1;
+        rCh->height = findMaxHeight(rCh->leftCh, rCh->rightCh) + 1;
+        return rCh;
+    }
+
+    Node *AVLTree::rightRotate(Node *node) {
+        Node *lCh = node->leftCh;
+        Node *rGrCh = node->leftCh->rightCh;
+        node->leftCh->rightCh = node;
+        node->leftCh = rGrCh;
+        node->height = findMaxHeight(node->leftCh, node->rightCh) + 1;
+        lCh->height = findMaxHeight(lCh->leftCh, lCh->rightCh) + 1;
+        return lCh;
+    }
+
+    int AVLTree::findBalanceFactor(Node *node) {
+        int l = 0, r = 0;
+        if (node == nullptr)
+            return 0;
+        if (node->leftCh != nullptr)
+            l = node->leftCh->height;
+        if (node->rightCh != nullptr)
+            r = node->rightCh->height;
+        return l - r;
+    }
+
+    int AVLTree::getHeight(const Node* node) {
+        if (node == nullptr)
+            return 0;
+        return node->height;
+    }
+
+    int AVLTree::findMaxHeight(const Node *left, const Node *right) {
+        return std::max(getHeight(left), getHeight(right));
+    }
+
+    Node* AVLTree::balanceInsert(Node* node, int key)
+    {
+        node->height = findMaxHeight(node->leftCh, node->rightCh) + 1;
+        int balanceFactor = findBalanceFactor(node);
+
+        if (balanceFactor > 1 && key < node->leftCh->key) {
+            port_.notify();
+            return rightRotate(node);
+        }
+        if (balanceFactor > 1 && key > node->leftCh->key) {
+            port_.notify();
+            node->leftCh = leftRotate(node->leftCh);
+            port_.notify();
+            return rightRotate(node);
+        }
+        if (balanceFactor < -1 && key > node->rightCh->key) {
+            port_.notify();
+            return leftRotate(node);
+        }
+        if (balanceFactor < -1 && key < node->rightCh->key) {
+            port_.notify();
+            node->rightCh = rightRotate(node->rightCh);
+            port_.notify();
+            return leftRotate(node);
+        }
+        return node;
+    }
+
+    Node* AVLTree::insert(Node *node, int key) {
+        if (node == nullptr) {
+            message_ = 0;
+            return new Node{key};
+        }
+        if (key < node->key)
+            node->leftCh = insert(node->leftCh, key);
+        else if (key > node->key)
+            node->rightCh = insert(node->rightCh, key);
+        else {
+            message_ = 1;
+            return node;
+        }
+        return balanceInsert(node, key);
+    }
+
+    Node* AVLTree::balanceDelete(Node *node) {
+        if (node == nullptr)
+            return node;
+        node->height = findMaxHeight(node->rightCh, node->leftCh) + 1;
+        int balanceFactor = findBalanceFactor(node);
+        if (balanceFactor > 1 && findBalanceFactor(node->leftCh) >= 0) {
+            port_.notify();
+            return rightRotate(node);
+        }
+        if (balanceFactor > 1 && findBalanceFactor(node->leftCh) < 0) {
+            port_.notify();
+            node->leftCh = leftRotate(node->leftCh);
+            port_.notify();
+            return rightRotate(node);
+        }
+        if (balanceFactor < -1 && findBalanceFactor(node->rightCh) < 0) {
+            port_.notify();
+            return leftRotate(node);
+        }
+        if (balanceFactor < -1 && findBalanceFactor(node->rightCh) >= 0) {
+            port_.notify();
+            node->rightCh = rightRotate(node->rightCh);
+            port_.notify();
+            return leftRotate(node);
+        }
+        return node;
+    }
+
+    Node *AVLTree::inorderSuccessor(Node *x) {
+        Node *cur = x->rightCh;
+        while (cur->leftCh != nullptr)
+            cur = cur->leftCh;
+        return cur;
+    }
+
+    void AVLTree::twoChildren(Node* node)
+    {
+        Node* cur = AVLTree::inorderSuccessor(node);
+        node->key = cur->key;
+        port_.notify();
+        node->rightCh = deleteNode(node->rightCh, cur->key);
+    }
+
+    Node* AVLTree::oneZeroChildren(Node* node)
+    {
+        Node *cur = nullptr;
+        if (node->leftCh)
+            cur = node->leftCh;
+        if (node->rightCh)
+            cur = node->rightCh;
+        if (cur == nullptr) {
+            cur = node;
+            node = nullptr;
+        }
+        else
+            *node = *cur;
+        port_.notify();
+        delete cur;
+        return node;
+    }
+
+    Node* AVLTree::deleteNode(Node *node, int key)
+    {
+        if(node == nullptr) {
+            message_ = 2;
+            return node;
+        }
+        if(key < node->key)
+            node->leftCh = deleteNode(node->leftCh, key);
+        else if(key > node->key)
+            node->rightCh = deleteNode(node->rightCh, key);
         else
         {
-            Node* cur = AVLTree::inorderSuccessor(node);
-            node->key = cur->key;
-            node->rightCh = deleteNode(node->rightCh, cur->key);
+            message_ = 0;
+            if(node->leftCh == nullptr || node->rightCh == nullptr)
+                node = oneZeroChildren(node);
+            else
+                twoChildren(node);
         }
+        return balanceDelete(node);
     }
 
-    if(node == nullptr)
-        return node;
-    ///update height of the node
-    node->height = findMaxHeight(node->rightCh, node->leftCh) + 1;
-
-    ///find balance factor
-    int balanceFactor = findBalanceFactor(node);
-    ///check whether tree is unbalanced and balance it
-    if(balanceFactor > 1 && findBalanceFactor(node->leftCh) >= 0)
-        return rightRotate(node);
-    if(balanceFactor > 1 && findBalanceFactor(node->leftCh) < 0)
+    void AVLTree::search(Node *node, int key, int& repeat)
     {
-        node->leftCh = leftRotate(node->leftCh);
-        return rightRotate(node);
+        while(node != nullptr)
+        {
+            if(node->key < key) {
+                passing_ = node->key;
+                port_.notify();
+                node = node->rightCh;
+            }
+            else if(node->key > key) {
+                passing_ = node->key;
+                port_.notify();
+                node = node->leftCh;
+            }
+            else{
+                passing_ = key;
+                port_.notify();
+                return;
+            }
+        }
+        repeat = 2;
     }
-    if(balanceFactor < -1 && findBalanceFactor(node->rightCh) < 0)
-        return leftRotate(node);
-    if(balanceFactor < -1 && findBalanceFactor(node->rightCh) >= 0)
-    {
-        node->rightCh = rightRotate(node->rightCh);
-        return leftRotate(node);
+
+    void AVLTree::inOrderTraversal(Node *node) {
+        if(node == nullptr)
+            return;
+        inOrderTraversal(node->leftCh);
+        passing_ = node->key;
+        port_.notify();
+        inOrderTraversal(node->rightCh);
     }
-    return node;
-}
 
-void AVLTree::deleteNode(int key)
-{
-    root_ = deleteNode(root_, key);
-    insertPort.notify();
-}
-
-void AVLTree::clearHelp(Node*& node)
-{
-    if (node != nullptr)
-    {
-        clearHelp(node->leftCh);
-        clearHelp(node->rightCh);
-        delete node;
-        node = nullptr;
+    void AVLTree::preOrderTraversal(Node *node) {
+        if(node == nullptr)
+            return;
+        passing_ = node->key;
+        port_.notify();
+        preOrderTraversal(node->leftCh);
+        preOrderTraversal(node->rightCh);
     }
+
+    void AVLTree::postOrderTraversal(Node *node) {
+        if(node == nullptr)
+            return;
+        postOrderTraversal(node->leftCh);
+        postOrderTraversal(node->rightCh);
+        passing_ = node->key;
+        port_.notify();
+    }
+
 }
-AVLTree::~AVLTree()
-{
-    clearHelp(root_);
-}
-
-//Node* AVLTree::search(Node *node, int key)
-//{
-//    if(node == nullptr)
-//        return node;
-//    if(key < node->key)
-//        node->leftCh = search(node->leftCh, key);
-//    else if(key > node->key)
-//        node->rightCh = search(node->rightCh, key);
-//    else
-//        return node;
-//}
-
-//Node* AVLTree::search(int key)
-//{
-//    return search(_root, key);
-//}
-
-//void AVLTree::levelPrint(Node* root)
-//{
-//    if (!root)
-//        return;
-//    std::queue<Node*> q;
-//    q.push(root);
-
-//    while (!q.empty())
-//    {
-//        Node* cur = q.front();
-//        q.pop();
-//            std::cout << cur->key <<"\n";
-//        if (cur->leftCh)
-//            q.push(cur->leftCh);
-//        if (cur->rightCh)
-//            q.push(cur->rightCh);
-//    }
-//}

@@ -6,26 +6,23 @@
 #include "Model.h"
 #include "View.h"
 
-class Controller {
-public:
-    Controller() = default;
-    Controller(AVLTree* ptr);
+namespace mvc {
+    class Controller {
+    private:
+        using ViewData = View::Command;
+        using Observer = NSLibrary::CObserver<ViewData >;
+        using Input = NSLibrary::CColdInput<ViewData >;
 
-    ///what to do with data
-    void action(const View::SendData& data);
+    public:
+        Controller(AVLTree *ptr);
+        Observer *input() { return &observer_; }
 
-    ///subscribe controller to view
-    NSLibrary::CObserver<View::SendData>* input() { return &observerAdd; }
+    private:
+        void action(const ViewData& data);
 
-    ///public, but let it be like that
-    AVLTree* ptr;
-
-private:
-    NSLibrary::CHotInput<View::SendData> observerAdd = [this](const View::SendData& data)
-            { action(data); };
-    NSLibrary::CHotInput<View::SendData> observerDelete = [this](const View::SendData& data)
-    { action(data); };
-};
-
+        AVLTree *model_;
+        Input observer_ = [this](const ViewData &data) { action(data); };
+    };
+}
 
 #endif //COURSEPROJECT_CONTROLLER_H

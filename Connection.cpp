@@ -1,9 +1,8 @@
 #include "Connection.h"
 
-Connection::Connection(MainWindow *mainWindow)
-    : _view(mainWindow)
-{
-    _controller.ptr = &_model;
-    _view.subscribe(_controller.input());
-    _model.subscribe(_view.input());
+namespace mvc {
+        Application::Application() {
+        view_.subscribe(controller_.input());
+        model_.subscribe(view_.input());
+    }
 }
