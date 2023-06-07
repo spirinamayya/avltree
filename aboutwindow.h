@@ -2,7 +2,9 @@
 #define COURSEPROJECT_ABOUTWINDOW_H
 
 #include <QDialog>
-
+#include <QTextEdit>
+#include <QVBoxLayout>
+#include <QLabel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -16,7 +18,7 @@ namespace mvc {
 
     public:
         explicit AboutWindow(QWidget *parent = nullptr);
-        ~AboutWindow() override;
+        ~AboutWindow();
 
     private:
         Ui::AboutWindow *ui;

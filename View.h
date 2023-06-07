@@ -22,6 +22,11 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSimpleTextItem>
+#include <QMenuBar>
+#include <QAction>
+#include <QMenu>
+#include <QThread>
+#include <QFileDialog>
 
 #include "/Users/mayyaspirina/Documents/CourseProject/Observer/Observer.h"
 #include "InfoTree.h"
@@ -34,17 +39,14 @@ namespace mvc {
         Q_OBJECT
     public:
         View();
+        ~View() = default;
 
         enum class Operation {
-            Add, Delete, Search, Traversal
-        };
-        enum class Type{
-            InOrder, PreOrder, PostOrder
+            Add, Delete, Search, DeleteAll
         };
         struct Command {
             int& value;
             Operation& operation;
-            Type& type;
         };
 
         void subscribe(NSLibrary::CObserver<Command> *observer) {
@@ -60,9 +62,21 @@ namespace mvc {
         ObserverAVL* input() { return &observer; }
 
     private:
+        void addMenu();
+        void addControlPannel();
+        void adjustMainWindow();
+        void connectObjects();
+
+        void drawNode(Info* cur, std::queue<Info*>& que, int& count, AVLTree::Operation& operation, int passing);
         void drawTree(Info* treeInfo, AVLTree::Operation& operation, int passing);
-        void drawPrep(const AVLTree::Data& data);
+        void draw(const AVLTree::Data& data);
         void deleteClicked(QPointF& point);
+
+        void inOrderTraversal(Info* node);
+        void preOrderTraversal(Info* node);
+        void postOrderTraversal(Info* node);
+
+        void getDataFromFile(QString& fileName);
 
     private slots:
         void addNode();
@@ -72,6 +86,8 @@ namespace mvc {
         void preOrder();
         void postOrder();
         void aboutMenu();
+        void loadMenu();
+        void stepBack();
 
     public:
 
@@ -84,10 +100,11 @@ namespace mvc {
         private:
             View* ptr;
         };
-
     private:
-        MainWindow* mainWindow;
-        AboutWindow* secondWindow_;
+        static constexpr int kRadius_ = 40;
+    private:
+        MainWindow* mainWindow_;
+        std::unique_ptr<AboutWindow> secondWindow_;
 
         QPushButton *addButton_;
         QPushButton *deleteButton_;
@@ -95,23 +112,24 @@ namespace mvc {
         QPushButton* inOrderButton_;
         QPushButton* preOrderButton_;
         QPushButton* postOrderButton_;
+        QPushButton* stepBackButton_;
         QLineEdit *editText_;
         QLineEdit* count_;
         QSlider* slider_;
-        QGraphicsEllipseItem* ellipse_;
-
         QGraphicsView *treeSpot_;
         CustomScene* scene_;
 
+        std::vector<std::pair<int, Operation>> history_;
+
         int value_;
         Operation operation_;
-        Type type_;
-        InfoTree* treeInfo_ = nullptr;
+        bool load_ = false;
+        bool hist_ = false;
+        std::unique_ptr<InfoTree> treeInfo_ = nullptr;
         int speed_ = 750;
-        static constexpr int RADIUS = 40;
-        ObserverCommand commandPort = Command{value_, operation_, type_};
+        ObserverCommand commandPort = Command{value_, operation_};
 
-        Input observer = [this](const AVLTree::Data &data) { drawPrep(data); };
+        Input observer = [this](const AVLTree::Data &data) { draw(data); };
     };
 }
 

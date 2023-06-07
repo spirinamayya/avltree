@@ -22,29 +22,17 @@ namespace mvc {
 
     void AVLTree::search(int key) {
         operation_ = Search;
-        message_ = 0;
+        message_ = Fine;
         search(root_, key, message_);
         if(message_ == 2)
             operation_ = Add;
         port_.notify();
     }
 
-    void AVLTree::inOrder() {
-        message_ = 0;
-        operation_ = Operation::Traversal;
-        inOrderTraversal(root_);
-    }
-
-    void AVLTree::preOrder() {
-        message_ = 0;
-        operation_ = Operation::Traversal;
-        preOrderTraversal(root_);
-    }
-
-    void AVLTree::postOrder() {
-        message_ = 0;
-        operation_ = Operation::Traversal;
-        postOrderTraversal(root_);
+    void AVLTree::deleteAll(){
+        clearHelp(root_);
+        operation_ = DeleteAll;
+        port_.notify();
     }
 
     void AVLTree::clearHelp(Node *&node) {
@@ -103,23 +91,23 @@ namespace mvc {
         int balanceFactor = findBalanceFactor(node);
 
         if (balanceFactor > 1 && key < node->leftCh->key) {
-            port_.notify();
+            //port_.notify();
             return rightRotate(node);
         }
         if (balanceFactor > 1 && key > node->leftCh->key) {
-            port_.notify();
+            //port_.notify();
             node->leftCh = leftRotate(node->leftCh);
-            port_.notify();
+            //port_.notify();
             return rightRotate(node);
         }
         if (balanceFactor < -1 && key > node->rightCh->key) {
-            port_.notify();
+            //port_.notify();
             return leftRotate(node);
         }
         if (balanceFactor < -1 && key < node->rightCh->key) {
-            port_.notify();
+            //port_.notify();
             node->rightCh = rightRotate(node->rightCh);
-            port_.notify();
+            //port_.notify();
             return leftRotate(node);
         }
         return node;
@@ -127,7 +115,7 @@ namespace mvc {
 
     Node* AVLTree::insert(Node *node, int key) {
         if (node == nullptr) {
-            message_ = 0;
+            message_ = Fine;
             return new Node{key};
         }
         if (key < node->key)
@@ -135,7 +123,7 @@ namespace mvc {
         else if (key > node->key)
             node->rightCh = insert(node->rightCh, key);
         else {
-            message_ = 1;
+            message_ = AlreadyPresent;
             return node;
         }
         return balanceInsert(node, key);
@@ -176,7 +164,7 @@ namespace mvc {
         return cur;
     }
 
-    void AVLTree::twoChildren(Node* node)
+    void AVLTree::deleteNodeTwoChildren(Node* node)
     {
         Node* cur = AVLTree::inorderSuccessor(node);
         node->key = cur->key;
@@ -184,7 +172,7 @@ namespace mvc {
         node->rightCh = deleteNode(node->rightCh, cur->key);
     }
 
-    Node* AVLTree::oneZeroChildren(Node* node)
+    Node* AVLTree::deleteNodeOneZeroChildren(Node* node)
     {
         Node *cur = nullptr;
         if (node->leftCh)
@@ -205,7 +193,7 @@ namespace mvc {
     Node* AVLTree::deleteNode(Node *node, int key)
     {
         if(node == nullptr) {
-            message_ = 2;
+            message_ = NotPresent;
             return node;
         }
         if(key < node->key)
@@ -214,16 +202,16 @@ namespace mvc {
             node->rightCh = deleteNode(node->rightCh, key);
         else
         {
-            message_ = 0;
+            message_ = Fine;
             if(node->leftCh == nullptr || node->rightCh == nullptr)
-                node = oneZeroChildren(node);
+                node = deleteNodeOneZeroChildren(node);
             else
-                twoChildren(node);
+                deleteNodeTwoChildren(node);
         }
         return balanceDelete(node);
     }
 
-    void AVLTree::search(Node *node, int key, int& repeat)
+    void AVLTree::search(Node *node, int key, Message& message)
     {
         while(node != nullptr)
         {
@@ -243,34 +231,7 @@ namespace mvc {
                 return;
             }
         }
-        repeat = 2;
-    }
-
-    void AVLTree::inOrderTraversal(Node *node) {
-        if(node == nullptr)
-            return;
-        inOrderTraversal(node->leftCh);
-        passing_ = node->key;
-        port_.notify();
-        inOrderTraversal(node->rightCh);
-    }
-
-    void AVLTree::preOrderTraversal(Node *node) {
-        if(node == nullptr)
-            return;
-        passing_ = node->key;
-        port_.notify();
-        preOrderTraversal(node->leftCh);
-        preOrderTraversal(node->rightCh);
-    }
-
-    void AVLTree::postOrderTraversal(Node *node) {
-        if(node == nullptr)
-            return;
-        postOrderTraversal(node->leftCh);
-        postOrderTraversal(node->rightCh);
-        passing_ = node->key;
-        port_.notify();
+        message = NotPresent;
     }
 
 }

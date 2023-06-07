@@ -17,24 +17,30 @@ namespace mvc {
 
     class InfoTree {
     public:
-        InfoTree(const Node* rootGet){
-            calcYCoord(rootGet);
+        InfoTree(const Node* rootGet)
+            :root_(buildInfoTree(rootGet))
+        {
+            calcYCoord();
             calcXCoord();
         }
         ~InfoTree();
         Info* getRoot() { return root_; }
         std::pair<int, bool> findValue(int x, int y);
+        void clear(Info* treeInfo);
 
     private:
-        void clear(Info* treeInfo);
+        static constexpr int kRadius_ = 40;
+        static constexpr int kHeight_ = 30;
+        static constexpr int kWidth_ = 15;
+    private:
+//        void clear(Info* treeInfo);
         void setWidth(Info* cur);
+        void setXCoord(Info* cur, std::queue<Info *>& que, int& count, int& timesNext, int& timesNow);
         void calcXCoord();
-        Info* copy(const Node* node);
-        void calcYCoord(const Node* node);
+        Info* buildInfoTree(const Node* node);
+        void setYCoord(Info* cur, std::queue<Info *>& que, int& count, int& timesNext, int& timesNow);
+        void calcYCoord();
 
-        static constexpr int RADIUS = 40;
-        static constexpr int HEIGHT = 30;
-        static constexpr int WIDTH = 15;
         Info* root_ = nullptr;
     };
 

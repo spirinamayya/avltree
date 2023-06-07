@@ -1,7 +1,7 @@
-#include "Connection.h"
+#include "Application.h"
 
 namespace mvc {
-        Application::Application() {
+    Application::Application() {
         view_.subscribe(controller_.input());
         model_.subscribe(view_.input());
     }

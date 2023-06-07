@@ -6,7 +6,7 @@ namespace mvc {
     }
 
     std::pair<int, bool> InfoTree::findValue(int x, int y) {
-        if(this == nullptr)
+        if (this == nullptr)
             return {0, false};
         std::queue<Info *> que;
         que.push(root_);
@@ -14,7 +14,7 @@ namespace mvc {
         while (!que.empty()) {
             cur = que.front();
             que.pop();
-            if((x > cur->x - RADIUS && x < cur->x + RADIUS) && (y > cur->y - RADIUS && y < cur->y + RADIUS))
+            if ((x > cur->x - kRadius_ && x < cur->x + kRadius_) && (y > cur->y - kRadius_ && y < cur->y + kRadius_))
                 return {cur->key, true};
             if (cur->left != nullptr)
                 que.push(cur->left);
@@ -39,13 +39,32 @@ namespace mvc {
         setWidth(cur->right);
 
         if (cur->right == nullptr && cur->left == nullptr)
-            cur->width = 2 * RADIUS;
+            cur->width = 2 * kRadius_;
         else if (cur->left == nullptr)
-            cur->width = 2 * cur->right->width + WIDTH;
+            cur->width = 2 * cur->right->width + kWidth_;
         else if (cur->right == nullptr)
-            cur->width = 2 * cur->left->width + WIDTH;
+            cur->width = 2 * cur->left->width + kWidth_;
         else
-            cur->width = 2 * std::max(cur->left->width, cur->right->width) + WIDTH;
+            cur->width = 2 * std::max(cur->left->width, cur->right->width) + kWidth_;
+    }
+
+    void InfoTree::setXCoord(Info* cur, std::queue<Info *>& que, int& count, int& timesNext, int& timesNow){
+        if (cur->left != nullptr) {
+            que.push(cur->left);
+            ++timesNext;
+            cur->left->x = cur->x - kWidth_ / 2 - cur->left->width / 2;
+        }
+        if (cur->right != nullptr) {
+            que.push(cur->right);
+            ++timesNext;
+            cur->right->x = cur->x + kWidth_ / 2 + cur->right->width / 2;
+        }
+        --timesNow;
+        if (timesNow == 0) {
+            ++count;
+            timesNow = timesNext;
+            timesNext = 0;
+        }
     }
 
     void InfoTree::calcXCoord() {
@@ -61,39 +80,41 @@ namespace mvc {
         while (!que.empty()) {
             cur = que.front();
             que.pop();
-            if (cur->left != nullptr) {
-                que.push(cur->left);
-                ++timesNext;
-                cur->left->x = cur->x - WIDTH / 2 - cur->left->width / 2;
-            }
-            if (cur->right != nullptr) {
-                que.push(cur->right);
-                ++timesNext;
-                cur->right->x = cur->x + WIDTH / 2 + cur->right->width / 2;
-            }
-            --timesNow;
-            if (timesNow == 0) {
-                ++count;
-                timesNow = timesNext;
-                timesNext = 0;
-            }
+            setXCoord(cur, que, count, timesNext, timesNow);
         }
     }
 
-    Info *InfoTree::copy(const Node *node) {
+    Info *InfoTree::buildInfoTree(const Node *node) {
         if (node == nullptr)
             return nullptr;
         else {
             Info *temp = new Info;
             temp->key = node->key;
-            temp->left = copy(node->leftCh);
-            temp->right = copy(node->rightCh);
+            temp->left = buildInfoTree(node->leftCh);
+            temp->right = buildInfoTree(node->rightCh);
             return temp;
         }
     }
 
-    void InfoTree::calcYCoord(const Node *rootGet) {
-        root_ = copy(rootGet);
+    void InfoTree::setYCoord(Info* cur, std::queue<Info *>& que, int& count, int& timesNext, int& timesNow) {
+        cur->y = count * (2 * kRadius_ + kHeight_);
+        if (cur->left != nullptr) {
+            que.push(cur->left);
+            ++timesNext;
+        }
+        if (cur->right != nullptr) {
+            que.push(cur->right);
+            ++timesNext;
+        }
+        --timesNow;
+        if (timesNow == 0) {
+            ++count;
+            timesNow = timesNext;
+            timesNext = 0;
+        }
+    }
+
+    void InfoTree::calcYCoord() {
         Info *root = root_;
         if (root == nullptr)
             return;
@@ -104,21 +125,7 @@ namespace mvc {
         while (!que.empty()) {
             cur = que.front();
             que.pop();
-            cur->y = count * (2 * RADIUS + HEIGHT);
-            if (cur->left != nullptr) {
-                que.push(cur->left);
-                ++timesNext;
-            }
-            if (cur->right != nullptr) {
-                que.push(cur->right);
-                ++timesNext;
-            }
-            --timesNow;
-            if (timesNow == 0) {
-                ++count;
-                timesNow = timesNext;
-                timesNext = 0;
-            }
+            setYCoord(cur, que, count, timesNext, timesNow);
         }
     }
 }

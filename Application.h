@@ -1,5 +1,5 @@
-#ifndef COURSEPROJECT_CONNECTION_H
-#define COURSEPROJECT_CONNECTION_H
+#ifndef COURSEPROJECT_APPLICATION_H
+#define COURSEPROJECT_APPLICATION_H
 
 #include "Controller.h"
 
@@ -14,4 +14,5 @@ namespace mvc {
         Controller controller_{&model_};
     };
 }
-#endif //COURSEPROJECT_CONNECTION_H
+
+#endif//COURSEPROJECT_APPLICATION_H

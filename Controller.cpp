@@ -6,17 +6,25 @@ namespace mvc {
     }
 
     void Controller::action(const ViewData &data) {
-        if(data.operation == View::Operation::Add)
-            model_->insert(data.value);
-        else if(data.operation == View::Operation::Delete)
-            model_->deleteNode(data.value);
-        else if(data.operation == View::Operation::Search)
-            model_->search(data.value);
-        else if(data.operation == View::Operation::Traversal && data.type == View::Type::InOrder)
-            model_->inOrder();
-        else if(data.operation == View::Operation::Traversal && data.type == View::Type::PreOrder)
-            model_->preOrder();
-        else
-            model_->postOrder();
+        switch(data.operation)
+        {
+            case View::Operation::Add: {
+                model_->insert(data.value);
+                break;
+            }
+            case View::Operation::Delete: {
+                model_->deleteNode(data.value);
+                break;
+            }
+            case View::Operation::Search:{
+                model_->search(data.value);
+                break;
+            }
+            case View::Operation::DeleteAll:{
+                model_->deleteAll();
+            }
+            default:
+                break;
+        }
     }
 }
