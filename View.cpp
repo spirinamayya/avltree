@@ -1,11 +1,8 @@
 #include "View.h"
 
-#include <chrono>
-
 namespace mvc {
 
-    View::View()
-    {
+    View::View() {
         mainWindow_ = new MainWindow();
         addMenu();
         addControlPannel();
@@ -21,12 +18,12 @@ namespace mvc {
         mainWindow_->show();
     }
 
-    void View::addMenu(){
-        QMenuBar* menu = new QMenuBar(mainWindow_);
-        QMenu* about = new QMenu("About", mainWindow_);
-        QMenu* load = new QMenu("Load", mainWindow_);
-        QAction* act = new QAction(about);
-        QAction* actLoad = new QAction(load);
+    void View::addMenu() {
+        QMenuBar *menu = new QMenuBar(mainWindow_);
+        QMenu *about = new QMenu("About", mainWindow_);
+        QMenu *load = new QMenu("Load", mainWindow_);
+        QAction *act = new QAction(about);
+        QAction *actLoad = new QAction(load);
         act->setText("Info");
         actLoad->setText("Load");
         about->addAction(act);
@@ -63,16 +60,16 @@ namespace mvc {
     }
 
     void View::adjustMainWindow() {
-        QHBoxLayout* layout = new QHBoxLayout(mainWindow_);
+        QHBoxLayout *layout = new QHBoxLayout(mainWindow_);
 
-        QGroupBox* box = new QGroupBox(mainWindow_);
-        QVBoxLayout* buttonLayout = new QVBoxLayout(box);
+        QGroupBox *box = new QGroupBox(mainWindow_);
+        QVBoxLayout *buttonLayout = new QVBoxLayout(box);
         layout->addWidget(treeSpot_, 75);
         layout->addWidget(box, 25);
         buttonLayout->setSpacing(15);
         buttonLayout->setAlignment(Qt::AlignTop);
 
-        QLabel* header1 = new QLabel(mainWindow_);
+        QLabel *header1 = new QLabel(mainWindow_);
         header1->setText(tr("Type integer:"));
         buttonLayout->addWidget(header1);
         buttonLayout->addWidget(editText_);
@@ -80,9 +77,9 @@ namespace mvc {
         buttonLayout->addWidget(deleteButton_);
         buttonLayout->addWidget(searchButton_);
 
-        QSpacerItem* spacer = new QSpacerItem(2, 70);
+        QSpacerItem *spacer = new QSpacerItem(2, 70);
         buttonLayout->addSpacerItem(spacer);
-        QLabel* header2 = new QLabel(mainWindow_);
+        QLabel *header2 = new QLabel(mainWindow_);
         header2->setText(tr("Tree traversals:"));
         buttonLayout->addWidget(header2);
         buttonLayout->addWidget(inOrderButton_);
@@ -90,14 +87,14 @@ namespace mvc {
         buttonLayout->addWidget(postOrderButton_);
 
         buttonLayout->addSpacerItem(spacer);
-        QLabel* header4= new QLabel(mainWindow_);
+        QLabel *header4 = new QLabel(mainWindow_);
         header4->setText(tr("Speed:"));
         buttonLayout->addWidget(header4);
         buttonLayout->addWidget(slider_);
         buttonLayout->addWidget(stepBackButton_);
 
         buttonLayout->addSpacerItem(spacer);
-        QLabel* header3 = new QLabel(mainWindow_);
+        QLabel *header3 = new QLabel(mainWindow_);
         header3->setText(tr("Node count:"));
         buttonLayout->addWidget(header3);
         count_ = new QLineEdit(mainWindow_);
@@ -118,17 +115,17 @@ namespace mvc {
         QObject::connect(stepBackButton_, SIGNAL(clicked(bool)), this, SLOT(stepBack()));
     }
 
-    void View::drawNode(Info *cur, std::queue<Info *>& que, int &count, AVLTree::Operation& operation, int passing) {
+    void View::drawNode(Info *cur, std::queue<Info *> &que, int &count, AVLTree::Operation &operation, int passing) {
         QBrush cyanbrush(Qt::darkCyan);
         QPen blackpen(Qt::black);
         blackpen.setWidth(1);
         QPen redpen(Qt::red);
         redpen.setWidth(3);
 
-        if(operation == AVLTree::Search && cur->key == passing || operation == AVLTree::Traversal && cur->key == passing)
-            scene_->addEllipse(cur->x,cur->y,kRadius_,kRadius_,redpen, cyanbrush);
+        if (operation == AVLTree::Search && cur->key == passing || operation == AVLTree::Traversal && cur->key == passing)
+            scene_->addEllipse(cur->x, cur->y, kRadius_, kRadius_, redpen, cyanbrush);
         else
-            scene_->addEllipse(cur->x,cur->y,kRadius_,kRadius_,blackpen, cyanbrush);
+            scene_->addEllipse(cur->x, cur->y, kRadius_, kRadius_, blackpen, cyanbrush);
 
         QGraphicsTextItem *text = scene_->addText(QString::number(cur->key));
         text->setPos(cur->x + 10, cur->y + 10);
@@ -145,16 +142,15 @@ namespace mvc {
         }
     }
 
-    void View::drawTree(Info* treeInfo, AVLTree::Operation& operation, int passing)
-    {
+    void View::drawTree(Info *treeInfo, AVLTree::Operation &operation, int passing) {
         scene_->clear();
         scene_->setBackgroundBrush(Qt::white);
-        Info* root = treeInfo;
+        Info *root = treeInfo;
         if (root == nullptr)
             return;
-        std::queue<Info*> que;
+        std::queue<Info *> que;
         que.push(root);
-        Info* cur;
+        Info *cur;
         int count = 1;
         while (!que.empty()) {
             cur = que.front();
@@ -164,8 +160,7 @@ namespace mvc {
         count_->setText(QString::number(count));
     }
 
-    void delay(int millisecondsWait)
-    {
+    void delay(int millisecondsWait) {
         QTimer t;
         QEventLoop loop;
         t.connect(&t, &QTimer::timeout, &loop, &QEventLoop::quit);
@@ -174,26 +169,23 @@ namespace mvc {
     }
 
     void View::draw(const AVLTree::Data &data) {
-        if(data.operation == AVLTree::DeleteAll)
-        {
+        if (data.operation == AVLTree::DeleteAll) {
             scene_->clear();
             treeInfo_.release();
             count_->setText("0");
         }
-        if(!hist_){
-            switch(data.message){
-                case AVLTree::AlreadyPresent:
-                {
-                    if(load_)
+        if (!hist_) {
+            switch (data.message) {
+                case AVLTree::AlreadyPresent: {
+                    if (load_)
                         return;
                     QMessageBox msgBox;
                     msgBox.setText("already present");
                     msgBox.exec();
                     return;
                 }
-                case AVLTree::NotPresent:
-                {
-                    if(load_)
+                case AVLTree::NotPresent: {
+                    if (load_)
                         return;
                     QMessageBox msgBox;
                     msgBox.setText("not present");
@@ -204,9 +196,9 @@ namespace mvc {
                     break;
             }
         }
-        if(history_.size() == 0)
+        if (history_.size() == 0)
             history_.push_back({value_, Operation::Add});
-        else if(!hist_ && history_[history_.size() - 1] != std::make_pair(value_, operation_)) {
+        else if (!hist_ && history_[history_.size() - 1] != std::make_pair(value_, operation_)) {
             if (data.operation == AVLTree::Operation::Add)
                 history_.push_back({value_, Operation::Add});
             else if (data.operation == AVLTree::Operation::Delete)
@@ -219,39 +211,38 @@ namespace mvc {
             count_->setText("0");
             return;
         }
-        if(treeInfo_ != nullptr) {
+        if (treeInfo_ != nullptr) {
             treeInfo_.release();
         }
         treeInfo_ = std::make_unique<InfoTree>(node);
-        if(treeInfo_) {
-            if(!load_ && !hist_)
-                delay(speed_);
+        if (treeInfo_) {
+            if (!load_ && !hist_)
+                delay(1500 - slider_->value());
             drawTree(treeInfo_->getRoot(), data.operation, data.passing_);
         }
     }
 
-    void View::deleteClicked(QPointF& point) {
-        speed_ = slider_->value();
+    void View::deleteClicked(QPointF &point) {
         std::pair<int, bool> temp = treeInfo_->findValue(point.x(), point.y());
-        if(!temp.second)
+        if (!temp.second)
             return;
         editText_->setText(QString::number(temp.first));
     }
 
     void View::inOrderTraversal(Info *node) {
-        if(node == nullptr)
+        if (node == nullptr)
             return;
         inOrderTraversal(node->left);
-        delay(slider_->value());
+        delay(1500 - slider_->value());
         AVLTree::Operation op = AVLTree::Operation::Traversal;
         drawTree(treeInfo_->getRoot(), op, node->key);
         inOrderTraversal(node->right);
     }
 
     void View::preOrderTraversal(Info *node) {
-        if(node == nullptr)
+        if (node == nullptr)
             return;
-        delay(slider_->value());
+        delay(1500 - slider_->value());
         AVLTree::Operation op = AVLTree::Operation::Traversal;
         drawTree(treeInfo_->getRoot(), op, node->key);
         preOrderTraversal(node->left);
@@ -259,30 +250,29 @@ namespace mvc {
     }
 
     void View::postOrderTraversal(Info *node) {
-        if(node == nullptr)
+        if (node == nullptr)
             return;
         postOrderTraversal(node->left);
         postOrderTraversal(node->right);
-        delay(slider_->value());
+        delay(1500 - slider_->value());
         AVLTree::Operation op = AVLTree::Operation::Traversal;
         drawTree(treeInfo_->getRoot(), op, node->key);
     }
 
-    void View::getDataFromFile(QString& fileName) {
+    void View::getDataFromFile(QString &fileName) {
         QFile inputFile(fileName);
         inputFile.open(QFile::ReadOnly | QFile::Text);
         QTextStream inputStream(&inputFile);
         QString key;
         operation_ = Operation::Add;
-        while(!inputStream.atEnd())
-        {
+        while (!inputStream.atEnd()) {
 
             QString line = inputStream.readLine();
             QList<QString> temp = line.split(" ");
-            for (QString& item : temp) {
+            for (QString &item: temp) {
                 bool convert;
                 value_ = item.toInt(&convert);
-                if(!convert)
+                if (!convert)
                     continue;
                 commandPort.notify();
             }
@@ -291,9 +281,8 @@ namespace mvc {
     }
 
     void View::addNode() {
-        speed_ = slider_->value();
         operation_ = Operation::Add;
-        if(editText_->text().size() == 0)
+        if (editText_->text().size() == 0)
             return;
         value_ = editText_->text().toInt();
         editText_->clear();
@@ -301,7 +290,6 @@ namespace mvc {
     }
 
     void View::deleteNode() {
-        speed_ = slider_->value();
         operation_ = Operation::Delete;
         value_ = editText_->text().toInt();
         editText_->clear();
@@ -309,30 +297,26 @@ namespace mvc {
     }
 
     void View::searchNode() {
-        speed_ = slider_->value();
         operation_ = Operation::Search;
         value_ = editText_->text().toInt();
         editText_->clear();
         commandPort.notify();
     }
 
-    void View::inOrder(){
-        speed_ = slider_->value();
-        if(treeInfo_ == nullptr)
+    void View::inOrder() {
+        if (treeInfo_ == nullptr)
             return;
         inOrderTraversal(treeInfo_->getRoot());
     }
 
-    void View::preOrder(){
-        speed_ = slider_->value();
-        if(treeInfo_ == nullptr)
+    void View::preOrder() {
+        if (treeInfo_ == nullptr)
             return;
         preOrderTraversal(treeInfo_->getRoot());
     }
 
-    void View::postOrder(){
-        speed_ = slider_->value();
-        if(treeInfo_ == nullptr)
+    void View::postOrder() {
+        if (treeInfo_ == nullptr)
             return;
         postOrderTraversal(treeInfo_->getRoot());
     }
@@ -347,7 +331,7 @@ namespace mvc {
         QString fileName = QFileDialog::getOpenFileName(mainWindow_, "Open File",
                                                         "../",
                                                         "Data (*.txt)");
-        if(fileName.isEmpty())
+        if (fileName.isEmpty())
             return;
         operation_ = Operation::DeleteAll;
         commandPort.notify();
@@ -359,29 +343,27 @@ namespace mvc {
     }
 
     void View::stepBack() {
-        if(history_.size() == 1)
+        if (history_.size() == 1)
             return;
         hist_ = true;
         operation_ = Operation::DeleteAll;
         commandPort.notify();
         operation_ = Operation::Add;
         history_.pop_back();
-        for(size_t i = 1; i < history_.size(); ++i)
-        {
+        for (size_t i = 1; i < history_.size(); ++i) {
             value_ = history_[i].first;
             operation_ = history_[i].second;
             commandPort.notify();
         }
-        if(history_.size() == 1) {
+        if (history_.size() == 1) {
             scene_->clear();
             count_->setText("0");
         }
         hist_ = false;
     }
 
-    void View::CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *event){
+    void View::CustomScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         QPointF pos = event->scenePos();
         ptr->deleteClicked(pos);
     }
-}
-
+}// namespace mvc

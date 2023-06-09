@@ -1,9 +1,10 @@
 #ifndef COURSEPROJECT_MODEL_H
 #define COURSEPROJECT_MODEL_H
 
-#include "/Users/mayyaspirina/Documents/CourseProject/Observer/Observer.h"
 #include <iostream>
 #include <vector>
+
+#include "Observer/Observer.h"
 
 namespace mvc {
     struct Node {
@@ -16,13 +17,13 @@ namespace mvc {
     class AVLTree {
     public:
         AVLTree()
-            : root_(nullptr){}
+            : root_(nullptr) {}
         ~AVLTree();
 
-        AVLTree(const AVLTree&) = delete;
-        AVLTree(AVLTree&&) noexcept = delete;
-        AVLTree& operator=(const AVLTree&) = delete;
-        AVLTree& operator=(AVLTree&&) noexcept = delete;
+        AVLTree(const AVLTree &) = delete;
+        AVLTree(AVLTree &&) noexcept = delete;
+        AVLTree &operator=(const AVLTree &) = delete;
+        AVLTree &operator=(AVLTree &&) noexcept = delete;
 
         void insert(int key);
         void deleteNode(int key);
@@ -30,17 +31,23 @@ namespace mvc {
         void deleteAll();
 
     public:
-        enum Operation{
-            Add, Delete, Search, Traversal, DeleteAll
+        enum Operation {
+            Add,
+            Delete,
+            Search,
+            Traversal,
+            DeleteAll
         };
-        enum Message{
-            Fine, NotPresent, AlreadyPresent
+        enum Message {
+            Fine,
+            NotPresent,
+            AlreadyPresent
         };
         struct Data {
-            Node*& value;
-            Message& message;
-            Operation& operation;
-            int& passing_;
+            Node *&value;
+            Message &message;
+            Operation &operation;
+            int &passing_;
         };
 
     private:
@@ -49,18 +56,18 @@ namespace mvc {
         Node *leftRotate(Node *node);
         Node *rightRotate(Node *node);
         int findBalanceFactor(Node *node);
-        static int getHeight(const Node* node);
+        static int getHeight(const Node *node);
         int findMaxHeight(const Node *left, const Node *right);
-        Node* balanceInsert(Node* node, int key);
-        Node* insert(Node *node, int key);
+        Node *balanceInsert(Node *node, int key);
+        Node *insert(Node *node, int key);
 
-        Node* balanceDelete(Node* node);
+        Node *balanceDelete(Node *node);
         Node *inorderSuccessor(Node *x);
-        void deleteNodeTwoChildren(Node* node);
-        Node* deleteNodeOneZeroChildren(Node* node);
+        void deleteNodeTwoChildren(Node *node);
+        Node *deleteNodeOneZeroChildren(Node *node);
         Node *deleteNode(Node *node, int key);
 
-        void search(Node* node, int key, Message& message);
+        void search(Node *node, int key, Message &message);
 
     private:
         using Observer = NSLibrary::CObserver<Data>;
@@ -79,6 +86,6 @@ namespace mvc {
         int passing_;
         Observable port_ = Data{root_, message_, operation_, passing_};
     };
-}
+}// namespace mvc
 
 #endif//COURSEPROJECT_MODEL_H

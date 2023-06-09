@@ -48,7 +48,7 @@ namespace mvc {
             cur->width = 2 * std::max(cur->left->width, cur->right->width) + kWidth_;
     }
 
-    void InfoTree::setXCoord(Info* cur, std::queue<Info *>& que, int& count, int& timesNext, int& timesNow){
+    void InfoTree::setXCoord(Info *cur, std::queue<Info *> &que, int &count, int &timesNext, int &timesNow) {
         if (cur->left != nullptr) {
             que.push(cur->left);
             ++timesNext;
@@ -96,7 +96,7 @@ namespace mvc {
         }
     }
 
-    void InfoTree::setYCoord(Info* cur, std::queue<Info *>& que, int& count, int& timesNext, int& timesNow) {
+    void InfoTree::setYCoord(Info *cur, std::queue<Info *> &que, int &count, int &timesNext, int &timesNow) {
         cur->y = count * (2 * kRadius_ + kHeight_);
         if (cur->left != nullptr) {
             que.push(cur->left);
@@ -128,4 +128,4 @@ namespace mvc {
             setYCoord(cur, que, count, timesNext, timesNow);
         }
     }
-}
+}// namespace mvc

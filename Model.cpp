@@ -8,6 +8,7 @@ namespace mvc {
 
     void AVLTree::insert(int key) {
         operation_ = Add;
+        message_ = Fine;
         root_ = insert(root_, key);
         if (root_ == nullptr)
             return;
@@ -16,6 +17,7 @@ namespace mvc {
 
     void AVLTree::deleteNode(int key) {
         operation_ = Delete;
+        message_ = Fine;
         root_ = deleteNode(root_, key);
         port_.notify();
     }
@@ -24,14 +26,15 @@ namespace mvc {
         operation_ = Search;
         message_ = Fine;
         search(root_, key, message_);
-        if(message_ == 2)
+        if (message_ == 2)
             operation_ = Add;
         port_.notify();
     }
 
-    void AVLTree::deleteAll(){
+    void AVLTree::deleteAll() {
         clearHelp(root_);
         operation_ = DeleteAll;
+        message_ = Fine;
         port_.notify();
     }
 
@@ -75,7 +78,7 @@ namespace mvc {
         return l - r;
     }
 
-    int AVLTree::getHeight(const Node* node) {
+    int AVLTree::getHeight(const Node *node) {
         if (node == nullptr)
             return 0;
         return node->height;
@@ -85,35 +88,34 @@ namespace mvc {
         return std::max(getHeight(left), getHeight(right));
     }
 
-    Node* AVLTree::balanceInsert(Node* node, int key)
-    {
+    Node *AVLTree::balanceInsert(Node *node, int key) {
         node->height = findMaxHeight(node->leftCh, node->rightCh) + 1;
         int balanceFactor = findBalanceFactor(node);
 
         if (balanceFactor > 1 && key < node->leftCh->key) {
-            //port_.notify();
+            port_.notify();
             return rightRotate(node);
         }
         if (balanceFactor > 1 && key > node->leftCh->key) {
-            //port_.notify();
+            port_.notify();
             node->leftCh = leftRotate(node->leftCh);
-            //port_.notify();
+            port_.notify();
             return rightRotate(node);
         }
         if (balanceFactor < -1 && key > node->rightCh->key) {
-            //port_.notify();
+            port_.notify();
             return leftRotate(node);
         }
         if (balanceFactor < -1 && key < node->rightCh->key) {
-            //port_.notify();
+            port_.notify();
             node->rightCh = rightRotate(node->rightCh);
-            //port_.notify();
+            port_.notify();
             return leftRotate(node);
         }
         return node;
     }
 
-    Node* AVLTree::insert(Node *node, int key) {
+    Node *AVLTree::insert(Node *node, int key) {
         if (node == nullptr) {
             message_ = Fine;
             return new Node{key};
@@ -129,7 +131,7 @@ namespace mvc {
         return balanceInsert(node, key);
     }
 
-    Node* AVLTree::balanceDelete(Node *node) {
+    Node *AVLTree::balanceDelete(Node *node) {
         if (node == nullptr)
             return node;
         node->height = findMaxHeight(node->rightCh, node->leftCh) + 1;
@@ -164,16 +166,14 @@ namespace mvc {
         return cur;
     }
 
-    void AVLTree::deleteNodeTwoChildren(Node* node)
-    {
-        Node* cur = AVLTree::inorderSuccessor(node);
+    void AVLTree::deleteNodeTwoChildren(Node *node) {
+        Node *cur = AVLTree::inorderSuccessor(node);
         node->key = cur->key;
         port_.notify();
         node->rightCh = deleteNode(node->rightCh, cur->key);
     }
 
-    Node* AVLTree::deleteNodeOneZeroChildren(Node* node)
-    {
+    Node *AVLTree::deleteNodeOneZeroChildren(Node *node) {
         Node *cur = nullptr;
         if (node->leftCh)
             cur = node->leftCh;
@@ -182,28 +182,25 @@ namespace mvc {
         if (cur == nullptr) {
             cur = node;
             node = nullptr;
-        }
-        else
+        } else
             *node = *cur;
         port_.notify();
         delete cur;
         return node;
     }
 
-    Node* AVLTree::deleteNode(Node *node, int key)
-    {
-        if(node == nullptr) {
+    Node *AVLTree::deleteNode(Node *node, int key) {
+        if (node == nullptr) {
             message_ = NotPresent;
             return node;
         }
-        if(key < node->key)
+        if (key < node->key)
             node->leftCh = deleteNode(node->leftCh, key);
-        else if(key > node->key)
+        else if (key > node->key)
             node->rightCh = deleteNode(node->rightCh, key);
-        else
-        {
+        else {
             message_ = Fine;
-            if(node->leftCh == nullptr || node->rightCh == nullptr)
+            if (node->leftCh == nullptr || node->rightCh == nullptr)
                 node = deleteNodeOneZeroChildren(node);
             else
                 deleteNodeTwoChildren(node);
@@ -211,21 +208,17 @@ namespace mvc {
         return balanceDelete(node);
     }
 
-    void AVLTree::search(Node *node, int key, Message& message)
-    {
-        while(node != nullptr)
-        {
-            if(node->key < key) {
+    void AVLTree::search(Node *node, int key, Message &message) {
+        while (node != nullptr) {
+            if (node->key < key) {
                 passing_ = node->key;
                 port_.notify();
                 node = node->rightCh;
-            }
-            else if(node->key > key) {
+            } else if (node->key > key) {
                 passing_ = node->key;
                 port_.notify();
                 node = node->leftCh;
-            }
-            else{
+            } else {
                 passing_ = key;
                 port_.notify();
                 return;
@@ -234,4 +227,4 @@ namespace mvc {
         message = NotPresent;
     }
 
-}
+}// namespace mvc

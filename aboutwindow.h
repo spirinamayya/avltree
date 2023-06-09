@@ -2,9 +2,9 @@
 #define COURSEPROJECT_ABOUTWINDOW_H
 
 #include <QDialog>
+#include <QLabel>
 #include <QTextEdit>
 #include <QVBoxLayout>
-#include <QLabel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -23,7 +23,7 @@ namespace mvc {
     private:
         Ui::AboutWindow *ui;
     };
-}
+}// namespace mvc
 
 
 #endif//COURSEPROJECT_ABOUTWINDOW_H

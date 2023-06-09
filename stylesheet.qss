@@ -36,11 +36,8 @@ QSlider::sub-page:horizontal {
   background-color: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #ffa02f, stop: 0.5 #d7801a, stop: 1 #ffa02f);
 }
 
-QLineEdit {
-    background-color: black;
-    background-attachment: scroll;
-}
 
 QWidget, !QLineEdit {
   background-color: rgb(45,45,45);
 }
+

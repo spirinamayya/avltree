@@ -6,8 +6,7 @@ namespace mvc {
     }
 
     void Controller::action(const ViewData &data) {
-        switch(data.operation)
-        {
+        switch (data.operation) {
             case View::Operation::Add: {
                 model_->insert(data.value);
                 break;
@@ -16,15 +15,15 @@ namespace mvc {
                 model_->deleteNode(data.value);
                 break;
             }
-            case View::Operation::Search:{
+            case View::Operation::Search: {
                 model_->search(data.value);
                 break;
             }
-            case View::Operation::DeleteAll:{
+            case View::Operation::DeleteAll: {
                 model_->deleteAll();
             }
             default:
                 break;
         }
     }
-}
+}// namespace mvc

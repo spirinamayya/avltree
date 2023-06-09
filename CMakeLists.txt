@@ -13,7 +13,6 @@ find_package(Qt6 COMPONENTS
         Core
         Gui
         Widgets
-        Pdf
         REQUIRED)
 
 add_executable(CourseProject main.cpp mainwindow.cpp mainwindow.ui Model.cpp View.cpp Controller.cpp InfoTree.cpp aboutwindow.cpp Application.cpp)
@@ -21,6 +20,5 @@ target_link_libraries(CourseProject
         Qt::Core
         Qt::Gui
         Qt::Widgets
-        Qt::Pdf
         )
 

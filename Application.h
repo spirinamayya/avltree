@@ -13,6 +13,6 @@ namespace mvc {
         View view_;
         Controller controller_{&model_};
     };
-}
+}// namespace mvc
 
 #endif//COURSEPROJECT_APPLICATION_H

@@ -12,4 +12,4 @@ namespace mvc {
         delete ui;
     }
 
-}
+}// namespace mvc

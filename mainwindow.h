@@ -5,7 +5,9 @@
 
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui {
+    class MainWindow;
+}
 QT_END_NAMESPACE
 
 namespace mvc {
@@ -20,6 +22,6 @@ namespace mvc {
     private:
         Ui::MainWindow *ui;
     };
-}
+}// namespace mvc
 
-#endif //COURSEPROJECT_MAINWINDOW_H
+#endif//COURSEPROJECT_MAINWINDOW_H

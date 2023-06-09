@@ -5,4 +5,4 @@ namespace mvc {
         view_.subscribe(controller_.input());
         model_.subscribe(view_.input());
     }
-}
+}// namespace mvc
